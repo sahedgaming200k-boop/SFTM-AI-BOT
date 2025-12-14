@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SFTM AI  BOT</title>
+    <link rel="icon" href="https://ibb.co.com/PGr7Ssxx" type="image/png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* Base Page and Iframe Setup */
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: Arial, sans-serif; position: relative; }
+        #iframeContainer { width: 100%; height: 100%; border: none; }
+
+        /* Floating Icon (Image and White Background) */
+        #floatingIcon {
+            position: fixed;
+            bottom: 30px;
+            right: 20px;
+            width: 45px;
+            height: 45px;
+            background: #ffffff; /* আইকনের কনটেইনারের ব্যাকগ্রাউন্ড সাদা */
+            border-radius: 50%;
+            overflow: hidden; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: move; 
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.8), 0 0 15px rgba(255, 0, 255, 0.6);
+            z-index: 10001;
+            transition: box-shadow 0.3s ease;
+            animation: iconPulse 1.5s infinite alternate;
+            user-select: none; 
+            -webkit-user-select: none;
+            touch-action: none; 
+        }
+
+        #floatingIcon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #floatingIcon:active {
+            box-shadow: 0 0 25px rgba(255, 255, 0, 1);
+        }
+
+        @keyframes iconPulse {
+            0% { transform: scale(1); box-shadow: 0 0 10px rgba(0, 255, 255, 0.8); }
+            100% { transform: scale(1.1); box-shadow: 0 0 15px rgba(0, 255, 255, 1), 0 0 20px rgba(255, 0, 255, 0.8); }
+        }
+
+        /* Modal Overlay (Folding Screen) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9);
+            display: none; justify-content: center; align-items: center; z-index: 10000; backdrop-filter: blur(10px);
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        
+        /* Modal Logo Styling */
+        .modal-logo {
+            display: block;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0px auto 20px auto; 
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Preditor Container Style Reverted to Dark/Glowing Theme */
+        .predictor-container {
+            max-width: 380px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: scaleY(0); 
+            transform-origin: top;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            
+            /* Dark/Glowing Background and Text Color */
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
+            color: #00ffff; /* Cyan Text */
+            padding: 30px 20px;
+            border-radius: 20px;
+            /* Colorful Border */
+            border: 2px solid;
+            border-image: linear-gradient(45deg, #00ffff, #ff00ff) 1;
+            /* Cyan Glow Shadow */
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.4);
+            -webkit-overflow-scrolling: touch;
+        }
+        .modal-overlay.show .predictor-container { transform: scaleY(1); }
+
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 30px; color: #ff00ff; cursor: pointer; line-height: 1; transition: color 0.2s; text-shadow: 0 0 10px #ff00ff; }
+        .close-btn:hover { color: #00ffff; }
+
+        /* --- Unified Input and Button Styling --- */
+        .login-title, .app-title {
+            font-size: 28px; font-weight: 900; background: linear-gradient(45deg, #00ffff, #ff00ff, #00ff00);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 30px; 
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.8); letter-spacing: 2px; text-align: center;
+        }
+
+        .input-group { margin-bottom: 20px; }
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid transparent; 
+            border-radius: 10px;
+            background: rgba(0, 255, 255, 0.1); /* Dark Input Background */
+            color: #00ffff; /* Cyan Input Text */
+            font-size: 16px;
+            font-family: 'Orbitron', monospace;
+            text-align: center;
+            outline: none;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            margin-top: 5px;
+        }
+        .input-group input:focus { border-color: #00ffff; box-shadow: 0 0 15px rgba(0, 255, 255, 0.5); }
+        .input-group input::placeholder { color: rgba(0, 255, 255, 0.6); } /* Light Cyan Placeholder */
+
+        .action-btn, .login-btn, .show-btn {
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            color: #000;
+            font-size: 16px;
+            font-weight: 900;
+            font-family: 'Orbitron', monospace;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Specific Button Colors - অপরিবর্তিত */
+        .login-btn { background: linear-gradient(45deg, #00ffff, #ff00ff); }
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 255, 255, 0.7); }
+
+        .show-btn { 
+            background: linear-gradient(45deg, #00ff00, #00ffff, #ff00ff); 
+            font-size: 18px; 
+            padding: 20px 30px; 
+            margin-bottom: 20px;
+            animation: showBtnGlow 2s infinite alternate;
+        }
+        @keyframes showBtnGlow {
+            0% { box-shadow: 0 0 15px rgba(0, 255, 0, 0.7); }
+            100% { box-shadow: 0 0 25px rgba(0, 255, 0, 1); }
+        }
+
+        #getKeyBtn { background: linear-gradient(45deg, #4ecdc4, #44a08d); color: white; }
+        #registerBtn { background: linear-gradient(45deg, #00ff00, #00ffff); }
+        #depositBtn { background: linear-gradient(45deg, #ffff00, #ff00ff); }
+        .logout-btn {
+            background: rgba(255, 0, 102, 0.2); border: 1px solid #ff0066; color: #ff0066; font-size: 14px;
+            padding: 10px; margin-top: 15px; box-shadow: none;
+        }
+        .logout-btn:hover { background: #ff0066; color: #000; }
+
+        /* Predictor Display Elements (Dark Theme Colors) */
+        .period-info { 
+            background: rgba(255, 0, 255, 0.1); padding: 10px; border-radius: 10px; margin-bottom: 20px; 
+            border: 1px solid rgba(255, 0, 255, 0.3); text-align: center;
+        }
+        .period-label { color: rgba(0, 255, 255, 0.7); font-size: 12px; margin-bottom: 5px; }
+        .period-number { font-size: 20px; font-weight: 900; color: #00ffff; text-shadow: 0 0 10px #00ffff; }
+
+        .timer-section { text-align: center; margin-bottom: 25px; }
+        .timer { font-size: 48px; font-weight: 900; color: #ff00ff; text-shadow: 0 0 15px #ff00ff, 0 0 25px #ff00ff; letter-spacing: 5px; }
+
+        .number-display {
+            width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px; font-size: 60px; font-weight: 900; border: 4px solid; 
+            text-shadow: 0 0 20px currentColor; position: relative;
+        }
+        .number-red { background: radial-gradient(circle, rgba(255, 0, 100, 0.4), rgba(255, 0, 0, 0.2)); color: #ff0066; border-color: #ff0066; box-shadow: 0 0 30px rgba(255, 0, 102, 0.8); }
+        .number-green { background: radial-gradient(circle, rgba(0, 255, 100, 0.4), rgba(0, 255, 0, 0.2)); color: #00ff66; border-color: #00ff66; box-shadow: 0 0 30px rgba(0, 255, 102, 0.8); }
+        
+        .waiting-msg { text-align: center; color: rgba(0, 255, 255, 0.8); font-size: 14px; display: none; }
+        .error-msg { color: #ff00ff; margin-top: 10px; display: none; font-size: 14px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <iframe id="iframeContainer" src="https://dkwin9.com/#/register?invitationCode=47144106960"></iframe>
+
+    <div id="floatingIcon" 
+         onmousedown="dragStart(event)" 
+         ontouchstart="dragStart(event)">
+        <img src="https://ibb.co.com/PGr7Ssxx" alt="Floating Icon">
+    </div>
+
+    <div id="predictorModal" class="modal-overlay">
+        
+        <div id="loginPage" class="predictor-container">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h1 class="login-title">SFTM AI  BOT</h1>
+            <img class="modal-logo" src="https://ibb.co.com/PGr7Ssxx" alt="Modal Logo">
+
+            <div class="input-group">
+                <input type="password" id="passwordInput" placeholder="Enter Password" autocomplete="off">
+            </div>
+            <button class="login-btn" onclick="login()">LOGIN</button>
+            <div id="errorMsg" class="error-msg">Invalid Password!</div>
+            
+            <div style="text-align: center; margin-top: 25px;">
+                <button onclick="getKey()" id="getKeyBtn" class="action-btn">
+                    🔑 GET KEY (Telegram)
+                </button>
+            </div>
+        </div>
+
+        <div id="predictorApp" class="predictor-container" style="display: none;">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <div class="header">
+                <h1 class="app-title">SFTM AI  BOT</h1>
+                <img class="modal-logo" src="https://ibb.co.com/PGr7Ssxx" alt="Modal Logo">
+            </div>
+
+            <div class="period-info">
+                <div class="period-label">Game Period</div>
+                <div id="periodNumber" class="period-number">Loading...</div>
+            </div>
+
+            <div class="timer-section">
+                <div id="timer" class="timer">60</div>
+            </div>
+
+            <div class="result-section">
+                <div id="numberDisplay" class="number-display">?</div>
+                <button id="showBtn" class="show-btn" onclick="showResult()">SHOW PREDICTION</button>
+                <div id="waitingMsg" class="waiting-msg">Wait for the next period...</div>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 10px;">
+                <button id="registerBtn" onclick="openRegister()" class="action-btn">
+                    🎲 𝐉𝐎𝐈𝐍 𝐂𝐇𝐀𝐍𝐍𝐄𝐋
+                </button>
+                <button id="depositBtn" onclick="openDeposit()" class="action-btn" style="display: none;">
+                    💰 𝐃𝐄𝐏𝐎𝐒𝐈𝐓 (External Link) 
+                </button>
+            </div>
+
+            <button class="logout-btn" onclick="logout()">LOGOUT</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Draggable Icon Logic ---
+        const floatingIcon = document.getElementById('floatingIcon');
+        let isDragging = false;
+        let initialX, initialY; 
+        let startRight, startBottom; 
+        const DRAG_THRESHOLD = 5; 
+
+        function getPosition(e) {
+            return e.touches ? e.touches[0] : e;
+        }
+
+        function dragStart(e) {
+            const pos = getPosition(e);
+            
+            initialX = pos.clientX;
+            initialY = pos.clientY;
+            
+            const iconRect = floatingIcon.getBoundingClientRect();
+            startRight = window.innerWidth - iconRect.right;
+            startBottom = window.innerHeight - iconRect.bottom;
+
+            document.addEventListener('mousemove', dragMove);
+            document.addEventListener('mouseup', dragEnd);
+            document.addEventListener('touchmove', dragMove, { passive: false });
+            document.addEventListener('touchend', dragEnd);
+        }
+
+        function dragMove(e) {
+            const pos = getPosition(e);
+
+            if (Math.abs(pos.clientX - initialX) > DRAG_THRESHOLD || Math.abs(pos.clientY - initialY) > DRAG_THRESHOLD) {
+                isDragging = true;
+            }
+
+            if (!isDragging) return;
+
+            const dx = pos.clientX - initialX;
+            const dy = pos.clientY - initialY;
+            
+            const newBottom = Math.min(Math.max(startBottom - dy, 0), window.innerHeight - floatingIcon.offsetHeight);
+            const newRight = Math.min(Math.max(startRight - dx, 0), window.innerWidth - floatingIcon.offsetWidth);
+
+            floatingIcon.style.bottom = newBottom + 'px';
+            floatingIcon.style.right = newRight + 'px';
+            
+            if (e.type === 'touchmove') e.preventDefault(); 
+        }
+
+        function dragEnd(e) {
+            document.removeEventListener('mousemove', dragMove);
+            document.removeEventListener('mouseup', dragEnd);
+            document.removeEventListener('touchmove', dragMove);
+            document.removeEventListener('touchend', dragEnd);
+            
+            if (!isDragging) {
+                openModal();
+            }
+            
+            isDragging = false;
+        }
+
+        // --- Modal/Overlay Functions ---
+        function openModal() {
+            document.getElementById('predictorModal').classList.add('show');
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+            document.getElementById('loginPage').style.display = isLoggedIn ? 'none' : 'block';
+            document.getElementById('predictorApp').style.display = isLoggedIn ? 'block' : 'none';
+            if (isLoggedIn && !timerInterval) {
+                startTimer();
+                updatePeriod();
+            }
+        }
+        function closeModal() {
+            document.getElementById('predictorModal').classList.remove('show');
+        }
+
+        // --- Core Logic (Unchanged) ---
+        const CORRECT_PASSWORD = 'Milon Vai 1212';
+        let timer = 60;
+        let timerInterval;
+        let lastNumber = null;
+        let numberHistory = [];
+        let canPredict = true;
+        let hasVisitedRegister = false;
+        
+        const patterns = {
+            0: [1, 4, 5, 8], 1: [3, 7, 8, 9], 2: [0, 4, 6, 8], 3: [1, 3, 5, 9], 4: [0, 1, 5, 8],
+            5: [2, 5, 7, 9], 6: [0, 1, 4, 8], 7: [2, 3, 5, 6], 8: [1, 2, 4, 5], 9: [0, 3, 5, 8]
+        };
+        
+        function generatePatternBasedNumber() {
+            let nextNumber;
+            if (lastNumber !== null && patterns[lastNumber]) {
+                const possibleNext = patterns[lastNumber];
+                if (Math.random() < 0.75) {
+                    nextNumber = possibleNext[Math.floor(Math.random() * possibleNext.length)];
+                } else {
+                    nextNumber = Math.floor(Math.random() * 10);
+                }
+            } else {
+                nextNumber = Math.floor(Math.random() * 10);
+            }
+            numberHistory.push(nextNumber);
+            if (numberHistory.length > 10) numberHistory.shift();
+            lastNumber = nextNumber;
+            return nextNumber;
+        }
+
+        function login() {
+            const password = document.getElementById('passwordInput').value;
+            const errorMsg = document.getElementById('errorMsg');
+            
+            if (password === CORRECT_PASSWORD) {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('predictorApp').style.display = 'block';
+                sessionStorage.setItem('isLoggedIn', 'true');
+                startTimer();
+                updatePeriod();
+            } else {
+                errorMsg.style.display = 'block';
+                document.getElementById('passwordInput').value = '';
+                setTimeout(() => { errorMsg.style.display = 'none'; }, 3000);
+            }
+        }
+
+        function logout() {
+            document.getElementById('loginPage').style.display = 'block';
+            document.getElementById('predictorApp').style.display = 'none';
+            document.getElementById('passwordInput').value = '';
+            sessionStorage.removeItem('isLoggedIn');
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        function showResult() {
+            if (!canPredict) return;
+            
+            const number = generatePatternBasedNumber();
+            const display = document.getElementById('numberDisplay');
+            const showBtn = document.getElementById('showBtn');
+            const waitingMsg = document.getElementById('waitingMsg');
+            
+            display.textContent = number;
+            display.classList.remove('number-red', 'number-green');
+            
+            if ([0, 2, 4, 6, 8].includes(number)) {
+                display.classList.add('number-red');
+            } else {
+                display.classList.add('number-green');
+            }
+            
+            canPredict = false;
+            showBtn.disabled = true;
+            showBtn.style.display = 'none';
+            waitingMsg.style.display = 'block';
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            const now = new Date();
+            const seconds = now.getSeconds();
+            timer = 60 - seconds;
+            
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                const currentSeconds = new Date().getSeconds();
+                timer = 60 - currentSeconds;
+                
+                if (currentSeconds === 0) {
+                    timer = 60;
+                    canPredict = true;
+                    updatePeriod();
+                    
+                    const showBtn = document.getElementById('showBtn');
+                    const waitingMsg = document.getElementById('waitingMsg');
+                    const display = document.getElementById('numberDisplay');
+                    
+                    showBtn.disabled = false;
+                    showBtn.style.display = 'block';
+                    waitingMsg.style.display = 'none';
+                    
+                    display.textContent = '?';
+                    display.classList.remove('number-red', 'number-green');
+                }
+                
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timer').textContent = timer.toString().padStart(2, '0');
+        }
+
+        function updatePeriod() {
+            const now = new Date();
+            const utc = new Date(now.getTime() + (now.getTimezoneOffset() * 60000));
+            const year = utc.getFullYear();
+            const month = (utc.getMonth() + 1).toString().padStart(2, '0');
+            const day = utc.getDate().toString().padStart(2, '0');
+            const hours = utc.getHours();
+            const minutes = utc.getMinutes();
+            const totalMinutes = hours * 60 + minutes;
+            const periodSuffix = (10001 + totalMinutes).toString();
+            const periodNumber = year + month + day + '1000' + periodSuffix.slice(-5);
+            document.getElementById('periodNumber').textContent = periodNumber;
+        }
+
+        function getKey() {
+            window.open('https://t.me/+GqtAtxuoRH40NDFl', '_blank');
+        }
+
+        function openRegister() {
+            window.open('https://t.me/+GqtAtxuoRH40NDFl', '_blank');
+            hasVisitedRegister = true;
+            
+            setTimeout(() => {
+                if (hasVisitedRegister) {
+                    document.getElementById('registerBtn').style.display = 'none';
+                    document.getElementById('depositBtn').style.display = 'block';
+                }
+            }, 2000);
+        }
+        
+        function openDeposit() {
+            window.open('https://dkwin9.com/#/register?invitationCode=47144106960', '_blank');
+        }
+
+        // --- Initialization ---
+        if (sessionStorage.getItem('isLoggedIn') === 'true') {
+            startTimer();
+            updatePeriod();
+        }
+
+        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+    </script>
+</body>
+</html>
